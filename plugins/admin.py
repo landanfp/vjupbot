@@ -85,8 +85,7 @@ from datetime import datetime
 @app.on_message(filters.command("remove_pro") & filters.user(ADMINS))
 async def remove_pro_handler(client: Client, message: Message):
     if len(message.command) < 2:
-        await message.reply_text("لطفاً آیدی عددی کاربر را وارد کنید. مثال:
-/remove_pro 123456789")
+        await message.reply_text("لطفاً آیدی عددی کاربر را وارد کنید. مثال:\n /remove_pro 123456789")
         return
 
     try:
