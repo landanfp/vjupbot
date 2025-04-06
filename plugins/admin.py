@@ -4,7 +4,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 from datetime import datetime
 from database.users_chats_db import get_user_data, save_user_data
 
-ADMINS = [123456789]  # شناسه ادمین‌ها (اینجا باید ID خودت رو بذاری)
+ADMINS = [763990585]  # شناسه ادمین‌ها (اینجا باید ID خودت رو بذاری)
 
 # دستور /addpro برای ارتقای کاربران
 @Tech_VJ.on_message(filters.command("addpro") & filters.user(ADMINS))
