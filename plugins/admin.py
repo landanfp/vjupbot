@@ -109,8 +109,7 @@ blacklist_file = "vjupbot-test/blacklist.txt"
 @app.on_message(filters.command("add_blacksite") & filters.user(ADMINS))
 async def add_blacksite_handler(client: Client, message: Message):
     if len(message.command) < 2:
-        await message.reply_text("لطفاً دامنه ممنوعه را وارد کنید. مثال:
-/add_blacksite tushy.com")
+        await message.reply_text("لطفاً دامنه ممنوعه را وارد کنید. مثال:\n /add_blacksite tushy.com")
         return
 
     domain = message.command[1].lower()
