@@ -266,12 +266,15 @@ async def echo(bot, update):
 
 
 
-try:
-    if plan_key == "free" and "url" in locals():
-        banned_domains = ["xvideos.com", "xnxx.com", "pornhub.com"]
-        for domain in banned_domains:
-            if domain in url:
-                await message.reply_text("آپلود از این سایت در پلن رایگان مجاز نیست.")
-                return
-except:
-    pass
+async def check_banned_domains(message, url, plan_key):
+    try:
+        if plan_key == "free" and url:
+            banned_domains = ["xvideos.com", "xnxx.com", "pornhub.com"]
+            for domain in banned_domains:
+                if domain in url:
+                    await message.reply_text("آپلود از این سایت در پلن رایگان مجاز نیست.")
+                    return True  # تا بدونیم بلاک شد
+    except Exception as e:
+        print("Error checking domains:", e)
+    return False  # مشکلی نبود، ادامه بده
+
