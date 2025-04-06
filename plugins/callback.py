@@ -1,7 +1,3 @@
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
-
 from config import Config
 from pyrogram import filters
 from pyrogram.errors import UserNotParticipant
@@ -15,7 +11,6 @@ from plugins.forcesub import get_invite_link
 @Tech_VJ.on_callback_query(filters.regex('^X0$'))
 async def delt(bot, update):
     await update.message.delete(True)
-
 
 @Tech_VJ.on_callback_query()
 async def button(bot, update):
@@ -88,8 +83,7 @@ async def button(bot, update):
             # disable_web_page_preview=True
         )
 
-
-# رفع مشکل استفاده از await خارج از تابع async:
+# اصلاح مشکل استفاده از await خارج از تابع async
 async def check_url_and_banned_domains(url, message):
     try:
         if plan_key == "free" and "url" in locals():
@@ -102,6 +96,9 @@ async def check_url_and_banned_domains(url, message):
         print(f"Error: {e}")
         pass
 
-# فراخوانی این تابع به صورت async
-# فرض کنید که 'url' و 'message' در دسترس است
-await check_url_and_banned_domains(url, message)
+# فراخوانی این تابع به صورت async داخل تابع غیرهمزمان
+@Tech_VJ.on_callback_query(filters.regex('^check_url$'))
+async def check_url(bot, update):
+    url = "http://example.com"
+    message = update.message
+    await check_url_and_banned_domains(url, message)
