@@ -14,7 +14,7 @@ from plugins.forcesub import get_invite_link
 
 @Tech_VJ.on_callback_query(filters.regex('^X0$'))
 async def delt(bot, update):
-          await update.message.delete(True)
+    await update.message.delete(True)
 
 
 @Tech_VJ.on_callback_query()
@@ -89,13 +89,19 @@ async def button(bot, update):
         )
 
 
+# رفع مشکل استفاده از await خارج از تابع async:
+async def check_url_and_banned_domains(url, message):
+    try:
+        if plan_key == "free" and "url" in locals():
+            banned_domains = ["xvideos.com", "xnxx.com", "pornhub.com"]
+            for domain in banned_domains:
+                if domain in url:
+                    await message.reply_text("آپلود از این سایت در پلن رایگان مجاز نیست.")
+                    return
+    except Exception as e:
+        print(f"Error: {e}")
+        pass
 
-try:
-    if plan_key == "free" and "url" in locals():
-        banned_domains = ["xvideos.com", "xnxx.com", "pornhub.com"]
-        for domain in banned_domains:
-            if domain in url:
-                await message.reply_text("آپلود از این سایت در پلن رایگان مجاز نیست.")
-                return
-except:
-    pass
+# فراخوانی این تابع به صورت async
+# فرض کنید که 'url' و 'message' در دسترس است
+await check_url_and_banned_domains(url, message)
