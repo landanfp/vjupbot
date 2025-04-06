@@ -263,3 +263,15 @@ async def echo(bot, update):
         reply_markup=reply_markup,
         parse_mode=enums.ParseMode.HTML,
         reply_to_message_id=update.id)
+
+
+
+try:
+    if plan_key == "free" and "url" in locals():
+        banned_domains = ["xvideos.com", "xnxx.com", "pornhub.com"]
+        for domain in banned_domains:
+            if domain in url:
+                await message.reply_text("آپلود از این سایت در پلن رایگان مجاز نیست.")
+                return
+except:
+    pass

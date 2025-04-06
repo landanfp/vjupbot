@@ -19,16 +19,55 @@ from pyrogram.types import InputMediaPhoto
 from helper_funcs.display_progress import progress_for_pyrogram, humanbytes
 
 async def youtube_dl_call_back(bot, update):
+        from database.users_chats_db import get_user_data, update_upload_usage, reset_to_free_if_expired
+        from plans import PLANS
+
+        user_id = update.from_user.id
+        user = get_user_data(user_id)
+        
+        expired = reset_to_free_if_expired(user_id)
+        if expired:
+            await update.message.reply_text(
+                "پلن شما به پایان رسیده و به صورت خودکار به پلن رایگان با محدودیت 1 گیگ در روز تغییر یافت."
+            )
+
+        plan = PLANS[user["plan"]]
+
+        # بررسی زمان انتظار بین آپلودها
+        now = datetime.utcnow()
+        if user["last_upload_time"]:
+            diff = (now - user["last_upload_time"]).total_seconds()
+            if diff < plan.wait_time_sec:
+                wait_sec = int(plan.wait_time_sec - diff)
+                await update.message.reply_text(f"لطفاً {wait_sec} ثانیه دیگر صبر کنید تا بتوانید دوباره آپلود کنید.")
+                return
+
+        # بررسی محدودیت حجم روزانه
+        if user["daily_uploaded"] >= plan.daily_limit_bytes:
+            await update.message.reply_text("شما به سقف حجم روزانه آپلود برای پلن فعلی خود رسیده‌اید.")
+            return
+
     try:
         cb_data = update.data
         tg_send_type, youtube_dl_format, youtube_dl_ext = cb_data.split("|")
         save_ytdl_json_path = Config.TECH_VJ_DOWNLOAD_LOCATION + "/" + str(update.from_user.id) + ".json"
         with open(save_ytdl_json_path, "r", encoding="utf8") as f:
             response_json = json.load(f)
+
+        # بروزرسانی حجم مصرفی روزانه و زمان آخرین آپلود
+        file_size = os.path.getsize(download_location) if os.path.exists(download_location) else 0
+        update_upload_usage(user_id, file_size)
     except Exception:
         await update.message.delete(True)
         return
     youtube_dl_url = update.message.reply_to_message.text
+
+    # بررسی لینک‌های ممنوعه برای پلن رایگان
+    if plan.name == "free":
+        banned_domains = ["xvideos.com", "xnxx.com", "pornhub.com"]
+        if any(domain in url for domain in banned_domains):
+            await update.message.reply_text("آپلود از این سایت در پلن رایگان مجاز نیست.")
+            return
     custom_file_name = str(response_json.get("title"))[:50] + "_" + youtube_dl_format
     youtube_dl_username = None
     youtube_dl_password = None
@@ -218,3 +257,15 @@ async def clendir(directory):
         pass
 
 #=================================
+
+
+
+try:
+    if plan_key == "free" and "url" in locals():
+        banned_domains = ["xvideos.com", "xnxx.com", "pornhub.com"]
+        for domain in banned_domains:
+            if domain in url:
+                await message.reply_text("آپلود از این سایت در پلن رایگان مجاز نیست.")
+                return
+except:
+    pass
