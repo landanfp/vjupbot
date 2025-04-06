@@ -119,8 +119,7 @@ async def add_blacksite_handler(client: Client, message: Message):
             if domain in lines:
                 await message.reply_text(f"{domain} قبلاً در لیست وجود دارد.")
                 return
-            f.write(f"{domain}
-")
+            f.write(f"{domain}")
         await message.reply_text(f"{domain} با موفقیت به لیست سایت‌های ممنوعه اضافه شد.")
     except Exception as e:
         await message.reply_text(f"خطا در افزودن دامنه: {e}")
