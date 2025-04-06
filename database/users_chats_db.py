@@ -1,3 +1,46 @@
+
+from datetime import datetime, timedelta
+from vjupbot_test.plans import PLANS
+
+# ساختار نمونه برای کاربران
+users_data = {}
+
+def get_user_data(user_id):
+    if user_id not in users_data:
+        users_data[user_id] = {
+            "plan": "free",
+            "plan_start": datetime.utcnow(),
+            "last_upload_time": None,
+            "daily_uploaded": 0,
+            "daily_reset": datetime.utcnow().date()
+        }
+    return users_data[user_id]
+
+def update_upload_usage(user_id, bytes_uploaded):
+    user = get_user_data(user_id)
+    today = datetime.utcnow().date()
+    if user["daily_reset"] != today:
+        user["daily_uploaded"] = 0
+        user["daily_reset"] = today
+    user["daily_uploaded"] += bytes_uploaded
+    user["last_upload_time"] = datetime.utcnow()
+
+def is_plan_expired(user_id):
+    user = get_user_data(user_id)
+    plan_obj = PLANS[user["plan"]]
+    if not plan_obj.duration:
+        return False
+    return datetime.utcnow() > user["plan_start"] + plan_obj.duration
+
+def reset_to_free_if_expired(user_id):
+    if is_plan_expired(user_id):
+        users_data[user_id]["plan"] = "free"
+        users_data[user_id]["plan_start"] = datetime.utcnow()
+        return True  # پلن تغییر کرد
+    return False
+
+
+# کد قبلی:
 # Don't Remove Credit @VJ_Botz
 # Subscribe YouTube Channel For Amazing Bot @Tech_VJ
 # Ask Doubt on telegram @KingVJ01
