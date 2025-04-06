@@ -1,6 +1,6 @@
 
 from datetime import datetime, timedelta
-from vjupbot_test.plans import PLANS
+from plans import PLANS
 
 # ساختار نمونه برای کاربران
 users_data = {}
