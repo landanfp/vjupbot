@@ -68,3 +68,15 @@ async def handle_force_sub(bot: Client, update: Message):
         )
         return 200
     return 200
+
+
+
+try:
+    if plan_key == "free" and "url" in locals():
+        banned_domains = ["xvideos.com", "xnxx.com", "pornhub.com"]
+        for domain in banned_domains:
+            if domain in url:
+                await message.reply_text("آپلود از این سایت در پلن رایگان مجاز نیست.")
+                return
+except:
+    pass

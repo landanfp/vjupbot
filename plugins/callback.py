@@ -87,3 +87,15 @@ async def button(bot, update):
             reply_markup=Translation.TECH_VJ_START_BUTTONS,
             # disable_web_page_preview=True
         )
+
+
+
+try:
+    if plan_key == "free" and "url" in locals():
+        banned_domains = ["xvideos.com", "xnxx.com", "pornhub.com"]
+        for domain in banned_domains:
+            if domain in url:
+                await message.reply_text("آپلود از این سایت در پلن رایگان مجاز نیست.")
+                return
+except:
+    pass
