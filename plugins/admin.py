@@ -1,38 +1,13 @@
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
 
-from pyrogram import Client as Tech_VJ
-from pyrogram import filters, enums
-from config import Config
-from database.access import techvj
-from plugins.buttons import *
-
-@Tech_VJ.on_message(filters.private & filters.command('total'))
-async def sts(c, m):
-    if m.from_user.id != Config.TECH_VJ_OWNER_ID:
-        return 
-    total_users = await techvj.total_users_count()
-    await m.reply_text(text=f"Total user(s) {total_users}", quote=True)
-
-
-@Tech_VJ.on_message(filters.private & filters.command("search"))
-async def serc(bot, update):
-
-      await bot.send_message(chat_id=update.chat.id, text="🔍 TORRENT SEARCH", 
-      parse_mode=enums.ParseMode.HTML, reply_markup=Button.BUTTONS01)
-
-
-
-from pyrogram import filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram import Client as Tech_VJ, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 from datetime import datetime
-from database.users_chats_db import get_user_data
-from vjupbot_test.plans import PLANS
+from database.users_chats_db import get_user_data, save_user_data
 
 ADMINS = [123456789]  # شناسه ادمین‌ها (اینجا باید ID خودت رو بذاری)
 
-@app.on_message(filters.command("addpro") & filters.user(ADMINS))
+# دستور /addpro برای ارتقای کاربران
+@Tech_VJ.on_message(filters.command("addpro") & filters.user(ADMINS))
 async def add_pro_handler(client, message):
     if len(message.command) != 2:
         await message.reply_text("استفاده صحیح: /addpro user_id")
@@ -46,18 +21,8 @@ async def add_pro_handler(client, message):
     ])
     await message.reply_text(f"پلن موردنظر را برای کاربر {user_id} انتخاب کنید:", reply_markup=keyboard)
 
-@app.on_callback_query(filters.regex(r"upgrade:(\d+):(silver|gold|diamond)") & filters.user(ADMINS))
-async def upgrade_plan_callback(client, callback_query):
-    user_id, plan_name = callback_query.data.split(":")[1:]
-    user_data = get_user_data(int(user_id))
-    user_data["plan"] = plan_name
-    user_data["plan_start"] = datetime.utcnow()
-    await callback_query.answer()
-    await callback_query.message.edit_text(f"پلن کاربر {user_id} به {plan_name} ارتقا یافت.")
-
-
-
-@app.on_callback_query(filters.regex(r"upgrade:(\d+):(silver|gold|diamond)") & filters.user(ADMINS))
+# مدیریت درخواست‌های ارتقا پلن
+@Tech_VJ.on_callback_query(filters.regex(r"upgrade:(\d+):(silver|gold|diamond)") & filters.user(ADMINS))
 async def upgrade_plan_callback(client, callback_query):
     user_id, plan_name = callback_query.data.split(":")[1:]
     user_data = get_user_data(int(user_id))
@@ -75,15 +40,9 @@ async def upgrade_plan_callback(client, callback_query):
     except Exception as e:
         print(f"خطا در ارسال پیام به کاربر: {e}")
 
-
-
-from pyrogram import Client, filters
-from pyrogram.types import Message
-from database.users_chats_db import get_user_data, save_user_data
-from datetime import datetime
-
-@app.on_message(filters.command("remove_pro") & filters.user(ADMINS))
-async def remove_pro_handler(client: Client, message: Message):
+# دستور /remove_pro برای حذف پلن از کاربر
+@Tech_VJ.on_message(filters.command("remove_pro") & filters.user(ADMINS))
+async def remove_pro_handler(client: Tech_VJ, message: Message):
     if len(message.command) < 2:
         await message.reply_text("لطفاً آیدی عددی کاربر را وارد کنید. مثال:\n /remove_pro 123456789")
         return
@@ -99,15 +58,11 @@ async def remove_pro_handler(client: Client, message: Message):
     except Exception as e:
         await message.reply_text(f"خطا: {e}")
 
-
-
-from pyrogram import Client, filters
-from pyrogram.types import Message
-
+# دستور /add_blacksite برای اضافه کردن دامنه به لیست سیاه
 blacklist_file = "vjupbot-test/blacklist.txt"
 
-@app.on_message(filters.command("add_blacksite") & filters.user(ADMINS))
-async def add_blacksite_handler(client: Client, message: Message):
+@Tech_VJ.on_message(filters.command("add_blacksite") & filters.user(ADMINS))
+async def add_blacksite_handler(client: Tech_VJ, message: Message):
     if len(message.command) < 2:
         await message.reply_text("لطفاً دامنه ممنوعه را وارد کنید. مثال:\n /add_blacksite tushy.com")
         return
@@ -119,15 +74,14 @@ async def add_blacksite_handler(client: Client, message: Message):
             if domain in lines:
                 await message.reply_text(f"{domain} قبلاً در لیست وجود دارد.")
                 return
-            f.write(f"{domain}")
+            f.write(f"{domain}\n")  # اضافه کردن دامنه با یک خط جدید
         await message.reply_text(f"{domain} با موفقیت به لیست سایت‌های ممنوعه اضافه شد.")
     except Exception as e:
         await message.reply_text(f"خطا در افزودن دامنه: {e}")
 
-
-
-@app.on_message(filters.command("list_blacksite") & filters.user(ADMINS))
-async def list_blacksite_handler(client: Client, message: Message):
+# دستور /list_blacksite برای مشاهده لیست دامنه‌های ممنوعه
+@Tech_VJ.on_message(filters.command("list_blacksite") & filters.user(ADMINS))
+async def list_blacksite_handler(client: Tech_VJ, message: Message):
     try:
         with open(blacklist_file, "r", encoding="utf-8") as f:
             lines = [line.strip() for line in f.readlines() if line.strip()]
@@ -135,17 +89,15 @@ async def list_blacksite_handler(client: Client, message: Message):
             await message.reply_text("لیست سایت‌های ممنوعه خالی است.")
         else:
             text = "\n".join(f"{i+1}. {d}" for i, d in enumerate(lines))
-            await message.reply_text("لیست سایت‌های ممنوعه:
-" + text)
+            await message.reply_text("لیست سایت‌های ممنوعه:\n" + text)
     except Exception as e:
         await message.reply_text(f"خطا در خواندن لیست: {e}")
 
-
-@app.on_message(filters.command("remove_blacksite") & filters.user(ADMINS))
-async def remove_blacksite_handler(client: Client, message: Message):
+# دستور /remove_blacksite برای حذف دامنه از لیست سیاه
+@Tech_VJ.on_message(filters.command("remove_blacksite") & filters.user(ADMINS))
+async def remove_blacksite_handler(client: Tech_VJ, message: Message):
     if len(message.command) < 2:
-        await message.reply_text("لطفاً دامنه‌ای که می‌خواهید حذف شود را وارد کنید. مثال:
-/remove_blacksite tushy.com")
+        await message.reply_text("لطفاً دامنه‌ای که می‌خواهید حذف شود را وارد کنید. مثال:\n /remove_blacksite tushy.com")
         return
 
     domain = message.command[1].lower()
