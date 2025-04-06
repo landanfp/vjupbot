@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 import math, os, time, shutil
 
-
 from config import Config
 # the Strings used for this "thing"
 from translation import Translation
@@ -45,7 +44,6 @@ async def progress_for_pyrogram(
             humanbytes(current),
             humanbytes(total),
             humanbytes(speed),
-            # elapsed_time if elapsed_time != '' else "0 s",
             estimated_total_time if estimated_total_time != '' else "0 s"
         )
         try:
@@ -84,4 +82,3 @@ def TimeFormatter(milliseconds: int) -> str:
         ((str(seconds) + "s, ") if seconds else "") + \
         ((str(milliseconds) + "ms, ") if milliseconds else "")
     return tmp[:-2]
-
