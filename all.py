@@ -1138,3 +1138,289 @@ async def echo(bot, update):
         parse_mode=enums.ParseMode.HTML,
         reply_to_message_id=update.id)
 
+# helper_funcs/display_progress.py file :
+import logging
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+import math, os, time, shutil
+
+
+from config import Config
+# the Strings used for this "thing"
+from translation import Translation
+
+
+async def progress_for_pyrogram(
+    current,
+    total,
+    ud_type,
+    message,
+    start
+):
+    now = time.time()
+    diff = now - start
+    if round(diff % 10.00) == 0 or current == total:
+        # if round(current / total * 100, 0) % 5 == 0:
+        percentage = current * 100 / total
+        speed = current / diff
+        elapsed_time = round(diff) * 1000
+        time_to_completion = round((total - current) / speed) * 1000
+        estimated_total_time = elapsed_time + time_to_completion
+
+        elapsed_time = TimeFormatter(milliseconds=elapsed_time)
+        estimated_total_time = TimeFormatter(milliseconds=estimated_total_time)
+
+        progress = "[{0}{1}] \nP: {2}%\n".format(
+            ''.join(["█" for i in range(math.floor(percentage / 5))]),
+            ''.join(["░" for i in range(20 - math.floor(percentage / 5))]),
+            round(percentage, 2))
+
+        tmp = progress + "{0} of {1}\nSpeed: {2}/s\nETA: {3}\n".format(
+            humanbytes(current),
+            humanbytes(total),
+            humanbytes(speed),
+            # elapsed_time if elapsed_time != '' else "0 s",
+            estimated_total_time if estimated_total_time != '' else "0 s"
+        )
+        try:
+            await message.edit(
+                text="{}\n {}".format(
+                    ud_type,
+                    tmp
+                )
+            )
+        except:
+            pass
+
+
+def humanbytes(size):
+    # https://stackoverflow.com/a/49361727/4723940
+    # 2**10 = 1024
+    if not size:
+        return ""
+    power = 2**10
+    n = 0
+    Dic_powerN = {0: ' ', 1: 'Ki', 2: 'Mi', 3: 'Gi', 4: 'Ti'}
+    while size > power:
+        size /= power
+        n += 1
+    return str(round(size, 2)) + " " + Dic_powerN[n] + 'B'
+
+
+def TimeFormatter(milliseconds: int) -> str:
+    seconds, milliseconds = divmod(int(milliseconds), 1000)
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    days, hours = divmod(hours, 24)
+    tmp = ((str(days) + "d, ") if days else "") + \
+        ((str(hours) + "h, ") if hours else "") + \
+        ((str(minutes) + "m, ") if minutes else "") + \
+        ((str(seconds) + "s, ") if seconds else "") + \
+        ((str(milliseconds) + "ms, ") if milliseconds else "")
+    return tmp[:-2]
+
+# helper_funcs/help_Nekmo_ffmpeg.py file :
+#در این فایل میخواهم جوری کد ها را تغییر بدی که وقتی لینکی آپلود شد واترمارک متن @Farshidband در پایین سمت چپ درچ شود.
+import logging
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+
+import asyncio
+import os
+import time
+from hachoir.metadata import extractMetadata
+from hachoir.parser import createParser
+
+
+async def place_water_mark(input_file, output_file, water_mark_file):
+    watermarked_file = output_file + ".watermark.png"
+    metadata = extractMetadata(createParser(input_file))
+    width = metadata.get("width")
+    # https://stackoverflow.com/a/34547184/4723940
+    shrink_watermark_file_genertor_command = [
+        "ffmpeg",
+        "-i", water_mark_file,
+        "-y -v quiet",
+        "-vf",
+        "scale={}*0.5:-1".format(width),
+        watermarked_file
+    ]
+    # print(shrink_watermark_file_genertor_command)
+    process = await asyncio.create_subprocess_exec(
+        *shrink_watermark_file_genertor_command,
+        # stdout must a pipe to be accessible as process.stdout
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    # Wait for the subprocess to finish
+    stdout, stderr = await process.communicate()
+    e_response = stderr.decode().strip()
+    t_response = stdout.decode().strip()
+    commands_to_execute = [
+        "ffmpeg",
+        "-i", input_file,
+        "-i", watermarked_file,
+        "-filter_complex",
+        # https://stackoverflow.com/a/16235519
+        # "\"[0:0] scale=400:225 [wm]; [wm][1:0] overlay=305:0 [out]\"",
+        # "-map \"[out]\" -b:v 896k -r 20 -an ",
+        "\"overlay=(main_w-overlay_w):(main_h-overlay_h)\"",
+        # "-vf \"drawtext=text='@FFMovingPictureExpertGroupBOT':x=W-(W/2):y=H-(H/2):fontfile=" + Config.FONT_FILE + ":fontsize=12:fontcolor=white:shadowcolor=black:shadowx=5:shadowy=5\"",
+        output_file
+    ]
+    # print(commands_to_execute)
+    process = await asyncio.create_subprocess_exec(
+        *commands_to_execute,
+        # stdout must a pipe to be accessible as process.stdout
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    # Wait for the subprocess to finish
+    stdout, stderr = await process.communicate()
+    e_response = stderr.decode().strip()
+    t_response = stdout.decode().strip()
+    return output_file
+
+
+async def take_screen_shot(video_file, output_directory, ttl):
+    # https://stackoverflow.com/a/13891070/4723940
+    out_put_file_name = output_directory + \
+        "/" + str(time.time()) + ".jpg"
+    file_genertor_command = [
+        "ffmpeg",
+        "-ss",
+        str(ttl),
+        "-i",
+        video_file,
+        "-vframes",
+        "1",
+        out_put_file_name
+    ]
+    # width = "90"
+    process = await asyncio.create_subprocess_exec(
+        *file_genertor_command,
+        # stdout must a pipe to be accessible as process.stdout
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    # Wait for the subprocess to finish
+    stdout, stderr = await process.communicate()
+    e_response = stderr.decode().strip()
+    t_response = stdout.decode().strip()
+    if os.path.lexists(out_put_file_name):
+        return out_put_file_name
+    else:
+        return None
+
+# https://github.com/Nekmo/telegram-upload/blob/master/telegram_upload/video.py#L26
+
+async def cult_small_video(video_file, output_directory, start_time, end_time):
+    # https://stackoverflow.com/a/13891070/4723940
+    out_put_file_name = output_directory + \
+        "/" + str(round(time.time())) + ".mp4"
+    file_genertor_command = [
+        "ffmpeg",
+        "-i",
+        video_file,
+        "-ss",
+        start_time,
+        "-to",
+        end_time,
+        "-async",
+        "1",
+        "-strict",
+        "-2",
+        out_put_file_name
+    ]
+    process = await asyncio.create_subprocess_exec(
+        *file_genertor_command,
+        # stdout must a pipe to be accessible as process.stdout
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    # Wait for the subprocess to finish
+    stdout, stderr = await process.communicate()
+    e_response = stderr.decode().strip()
+    t_response = stdout.decode().strip()
+    if os.path.lexists(out_put_file_name):
+        return out_put_file_name
+    else:
+        return None
+
+
+async def generate_screen_shots(
+    video_file,
+    output_directory,
+    is_watermarkable,
+    wf,
+    min_duration,
+    no_of_photos
+):
+    metadata = extractMetadata(createParser(video_file))
+    duration = 0
+    if metadata is not None:
+        if metadata.has("duration"):
+            duration = metadata.get('duration').seconds
+    if duration > min_duration:
+        images = []
+        ttl_step = duration // no_of_photos
+        current_ttl = ttl_step
+        for looper in range(0, no_of_photos):
+            ss_img = await take_screen_shot(video_file, output_directory, current_ttl)
+            current_ttl = current_ttl + ttl_step
+            if is_watermarkable:
+                ss_img = await place_water_mark(ss_img, output_directory + "/" + str(time.time()) + ".jpg", wf)
+            images.append(ss_img)
+        return images
+    else:
+        return None
+
+# helper_funcs/help_uploadbot.py file :
+import logging
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+import os
+import requests
+
+def DetectFileSize(url):
+    r = requests.get(url, allow_redirects=True, stream=True)
+    total_size = int(r.headers.get("content-length", 0))
+    return total_size
+
+
+def DownLoadFile(url, file_name, chunk_size, client, ud_type, message_id, chat_id):
+    if os.path.exists(file_name):
+        os.remove(file_name)
+    if not url:
+        return file_name
+    r = requests.get(url, allow_redirects=True, stream=True)
+    # https://stackoverflow.com/a/47342052/4723940
+    total_size = int(r.headers.get("content-length", 0))
+    downloaded_size = 0
+    with open(file_name, 'wb') as fd:
+        for chunk in r.iter_content(chunk_size=chunk_size):
+            if chunk:
+                fd.write(chunk)
+                downloaded_size += chunk_size
+            if client is not None:
+                if ((total_size // downloaded_size) % 5) == 0:
+                    time.sleep(0.3)
+                    try:
+                        client.edit_message_text(
+                            chat_id,
+                            message_id,
+                            text="{}: {} of {}".format(
+                                ud_type,
+                                humanbytes(downloaded_size),
+                                humanbytes(total_size)
+                            )
+                        )
+                    except:
+                        pass
+    return file_name
